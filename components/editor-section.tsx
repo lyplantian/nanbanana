@@ -14,6 +14,15 @@ type GalleryImage = {
   alt?: string
 }
 
+const ASPECT_RATIOS = [
+  { label: "Auto (input)", value: "auto", hint: "Matches the uploaded photo" },
+  { label: "Square 1:1", value: "1:1", hint: "Classic social square" },
+  { label: "Landscape 16:9", value: "16:9", hint: "Widescreen format" },
+  { label: "Portrait 9:16", value: "9:16", hint: "Tall smartphone view" },
+  { label: "Wide 21:9", value: "21:9", hint: "Cinematic banner" },
+  { label: "Classic 4:5", value: "4:5", hint: "Portrait printing" },
+]
+
 export function EditorSection() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [prompt, setPrompt] = useState("")
@@ -21,6 +30,8 @@ export function EditorSection() {
   const [galleryImage, setGalleryImage] = useState<GalleryImage | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [aspectRatio, setAspectRatio] = useState(ASPECT_RATIOS[0].value)
+  const selectedRatioLabel = ASPECT_RATIOS.find((item) => item.value === aspectRatio)?.hint
 
   const finalButtonText = useMemo(() => {
     if (isGenerating) return "Generating..."
@@ -45,9 +56,14 @@ export function EditorSection() {
 
     setErrorMessage(null)
     setGalleryImage(null)
-    setStatusMessage("Sending prompt to Gemini 2.5 Flash Image")
     setIsGenerating(true)
 
+    const ratioLabel =
+      aspectRatio && aspectRatio !== "auto"
+        ? `${aspectRatio} aspect ratio`
+        : "native aspect ratio"
+
+    setStatusMessage(`Sending prompt to Gemini 2.5 Flash Image (${ratioLabel})`)
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -57,6 +73,7 @@ export function EditorSection() {
         body: JSON.stringify({
           prompt,
           image: selectedImage,
+          aspectRatio: aspectRatio === "auto" ? undefined : aspectRatio,
         }),
       })
 
@@ -155,6 +172,33 @@ export function EditorSection() {
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[100px]"
                 />
+              </div>
+
+              <div className="mt-4">
+                <Label className="mb-2 block">Target Aspect Ratio</Label>
+                <div className="flex flex-wrap gap-2">
+                  {ASPECT_RATIOS.map((option) => {
+                    const isActive = option.value === aspectRatio
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setAspectRatio(option.value)}
+                        className={`rounded-full border px-4 py-1 text-xs font-semibold transition ${
+                          isActive
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-transparent text-muted-foreground"
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {option.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {selectedRatioLabel && (
+                  <p className="mt-2 text-xs text-muted-foreground">{selectedRatioLabel}</p>
+                )}
               </div>
 
               <Button
