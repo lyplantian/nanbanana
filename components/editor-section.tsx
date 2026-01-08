@@ -5,9 +5,16 @@ import type React from "react"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, Wand2 } from "lucide-react"
+import { Download, Maximize2, Upload, Wand2 } from "lucide-react"
 
 type GalleryImage = {
   src: string
@@ -28,6 +35,7 @@ export function EditorSection() {
   const [prompt, setPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [galleryImage, setGalleryImage] = useState<GalleryImage | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [aspectRatio, setAspectRatio] = useState(ASPECT_RATIOS[0].value)
@@ -56,6 +64,7 @@ export function EditorSection() {
 
     setErrorMessage(null)
     setGalleryImage(null)
+    setIsPreviewOpen(false)
     setIsGenerating(true)
 
     const ratioLabel =
@@ -99,14 +108,88 @@ export function EditorSection() {
     }
   }
 
+  const formatTimestamp = (date: Date) => {
+    const pad = (value: number) => value.toString().padStart(2, "0")
+    return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+  }
+
+  const getFileExtension = (src: string) => {
+    const dataUrlMatch = src.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/)
+    if (dataUrlMatch?.[1]) {
+      const subtype = dataUrlMatch[1].split("/")[1]
+      return subtype || "png"
+    }
+
+    try {
+      const parsed = new URL(src)
+      const pathname = parsed.pathname
+      const extMatch = pathname.match(/\.([a-zA-Z0-9]+)$/)
+      return extMatch?.[1]?.toLowerCase() || "png"
+    } catch {
+      const extMatch = src.split("?")[0]?.match(/\.([a-zA-Z0-9]+)$/)
+      return extMatch?.[1]?.toLowerCase() || "png"
+    }
+  }
+
+  const buildFileName = (src: string) => {
+    const ext = getFileExtension(src)
+    const normalizedPrompt = prompt
+      .trim()
+      .slice(0, 40)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+
+    const base = normalizedPrompt || "ai-edit"
+    return `${base}-${formatTimestamp(new Date())}.${ext}`
+  }
+
+  const downloadImage = async (src: string) => {
+    const fileName = buildFileName(src)
+
+    try {
+      const response = await fetch(src)
+      if (!response.ok) {
+        throw new Error("Failed to fetch image")
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+
+      const link = document.createElement("a")
+      link.href = objectUrl
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
+    } catch {
+      window.open(src, "_blank", "noopener,noreferrer")
+    }
+  }
+
   const outputContent = () => {
     if (galleryImage) {
       return (
-        <img
-          src={galleryImage.src}
-          alt={galleryImage.alt ?? "Generated output"}
-          className="h-full w-full rounded-lg object-cover"
-        />
+        <button
+          type="button"
+          className="group relative h-full w-full cursor-zoom-in rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          onClick={() => setIsPreviewOpen(true)}
+          aria-label="Preview generated image"
+        >
+          <img
+            src={galleryImage.src}
+            alt={galleryImage.alt ?? "Generated output"}
+            className="h-full w-full rounded-lg object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100">
+            <div className="inline-flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+              <Maximize2 className="h-4 w-4" />
+              Click to preview
+            </div>
+          </div>
+        </button>
       )
     }
 
@@ -154,6 +237,7 @@ export function EditorSection() {
                     onClick={() => {
                       setSelectedImage(null)
                       setGalleryImage(null)
+                      setIsPreviewOpen(false)
                     }}
                   >
                     Change
@@ -220,6 +304,23 @@ export function EditorSection() {
                 {outputContent()}
               </div>
 
+              {galleryImage && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" onClick={() => setIsPreviewOpen(true)}>
+                    <Maximize2 className="mr-2 h-4 w-4" />
+                    Preview
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => downloadImage(galleryImage.src)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                </div>
+              )}
+
               <div className="mt-6 rounded-lg bg-accent/50 p-4">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">🎯</span>
@@ -239,6 +340,40 @@ export function EditorSection() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Generated Image</DialogTitle>
+            <DialogDescription>Click download to save the full-resolution output.</DialogDescription>
+          </DialogHeader>
+
+          {galleryImage ? (
+            <div className="space-y-4">
+              <div className="flex max-h-[70vh] items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
+                <img
+                  src={galleryImage.src}
+                  alt={galleryImage.alt ?? "Generated output preview"}
+                  className="max-h-[70vh] w-auto max-w-full object-contain"
+                />
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => downloadImage(galleryImage.src)}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">No image to preview.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }
