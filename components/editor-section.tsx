@@ -329,8 +329,8 @@ export function EditorSection() {
                     {errorMessage && <p className="text-destructive">{errorMessage}</p>}
                     {!statusMessage && !errorMessage && (
                       <p className="text-muted-foreground">
-                        Be specific with your prompt for best results. Try "Add sunset lighting" or "Change to winter
-                        scene".
+                        Be specific with your prompt for best results. Try &quot;Add sunset lighting&quot; or
+                        &quot;Change to winter scene&quot;.
                       </p>
                     )}
                   </div>

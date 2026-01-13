@@ -81,3 +81,34 @@ async function main() {
 }
 
 main();
+
+
+====================
+Supabase Google 登录（Server-side / SSR）
+====================
+
+前置条件：你需要在 Supabase 控制台启用 Google Provider，并配置回调地址。
+
+1) Supabase Dashboard -> Authentication -> Providers -> Google
+   - 启用 Google
+   - 填写 Google OAuth 的 Client ID / Client Secret（来自 Google Cloud Console）
+
+2) Supabase Dashboard -> Authentication -> URL Configuration
+   - 将 Redirect URLs 添加：
+     - http://localhost:3000/auth/callback
+     - 你的线上域名，例如 https://your-domain.com/auth/callback
+
+3) 在本项目根目录 `.env.local` 配置：
+   - NEXT_PUBLIC_SUPABASE_URL=你的 Supabase 项目 URL
+   - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=你的 Supabase publishable key
+     （或使用 legacy：NEXT_PUBLIC_SUPABASE_ANON_KEY）
+
+4) 确保 Next.js 中间件已启用（用于刷新 session/cookies）：
+   - middleware.ts
+
+5) 重启开发服务器：
+   - npm run dev
+
+参考文档：
+- https://supabase.com/docs/guides/auth/social-login/auth-google
+- https://supabase.com/docs/guides/auth/server-side/creating-a-client

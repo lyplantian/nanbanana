@@ -13,7 +13,14 @@ function Avatar({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
 }
 
 function AvatarImage({ className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
-  return <img data-slot="avatar-image" className={cn("aspect-square size-full object-cover", className)} {...props} />
+  return (
+    <img
+      data-slot="avatar-image"
+      className={cn("aspect-square size-full object-cover", className)}
+      alt={props.alt ?? ""}
+      {...props}
+    />
+  )
 }
 
 function AvatarFallback({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

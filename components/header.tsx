@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { AuthButton } from "@/components/auth-button"
 import { Button } from "@/components/ui/button"
 
 export function Header() {
@@ -12,46 +13,45 @@ export function Header() {
           <span className="text-xl font-bold">BananaEdit</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden items-center gap-6 md:flex">
           <Link
             href="#features"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => console.log("导航点击 - 功能特性")}
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Features
           </Link>
           <Link
             href="#showcase"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => console.log("导航点击 - 案例展示")}
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Showcase
           </Link>
           <Link
             href="#reviews"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => console.log("导航点击 - 用户评价")}
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Reviews
           </Link>
           <Link
             href="#faq"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => console.log("导航点击 - 常见问题")}
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             FAQ
           </Link>
         </nav>
 
-        <Button
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={() => {
-            console.log("导航操作 - 开始使用")
-            document.getElementById("editor")?.scrollIntoView({ behavior: "smooth" })
-          }}
-        >
-          Get Started
-        </Button>
+        <div className="flex items-center gap-3">
+          <AuthButton size="lg" />
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => {
+              document.getElementById("editor")?.scrollIntoView({ behavior: "smooth" })
+            }}
+          >
+            Get Started
+          </Button>
+        </div>
       </div>
     </header>
   )

@@ -73,7 +73,9 @@ export function ReviewsSection() {
                   <Star key={i} className="h-4 w-4 fill-primary text-primary" />
                 ))}
               </div>
-              <p className="mb-6 text-sm leading-relaxed text-foreground">"{review.content}"</p>
+              <p className="mb-6 text-sm leading-relaxed text-foreground">
+                &ldquo;{review.content}&rdquo;
+              </p>
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarFallback className="bg-primary/10 text-primary font-medium">{review.avatar}</AvatarFallback>
