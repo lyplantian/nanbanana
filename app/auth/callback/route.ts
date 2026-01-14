@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getRequestOrigin } from "@/lib/supabase/origin"
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get("code")
-  const next = searchParams.get("next") ?? "/"
+  const url = new URL(request.url)
+  const code = url.searchParams.get("code")
+  const next = url.searchParams.get("next") ?? "/"
+  const origin = getRequestOrigin(request)
 
   if (code) {
     const supabase = await createClient()

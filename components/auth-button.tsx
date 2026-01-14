@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronDown, Chrome, Copy, LogOut } from "lucide-react"
+import { Check, ChevronDown, Chrome, Copy, Loader2, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -44,6 +44,7 @@ export function AuthButton({ className, size }: AuthButtonProps) {
   const [supabaseConfigured, setSupabaseConfigured] = React.useState(true)
   const [copied, setCopied] = React.useState(false)
   const [confirmSignOutOpen, setConfirmSignOutOpen] = React.useState(false)
+  const [isSigningOut, setIsSigningOut] = React.useState(false)
 
   React.useEffect(() => {
     if (!copied) return
@@ -157,7 +158,13 @@ export function AuthButton({ className, size }: AuthButtonProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <AlertDialog open={confirmSignOutOpen} onOpenChange={setConfirmSignOutOpen}>
+        <AlertDialog
+          open={confirmSignOutOpen}
+          onOpenChange={(open) => {
+            if (isSigningOut) return
+            setConfirmSignOutOpen(open)
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>确认退出登录？</AlertDialogTitle>
@@ -166,15 +173,28 @@ export function AuthButton({ className, size }: AuthButtonProps) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogCancel disabled={isSigningOut}>取消</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60"
-                onClick={() => {
-                  setConfirmSignOutOpen(false)
-                  window.location.assign("/auth/signout")
+                disabled={isSigningOut}
+                onClick={async (e) => {
+                  e.preventDefault()
+                  if (isSigningOut) return
+                  setIsSigningOut(true)
+                  try {
+                    const res = await fetch("/api/auth/signout", { method: "POST" })
+                    if (!res.ok) {
+                      throw new Error("Sign out failed")
+                    }
+                    setUser(null)
+                    setConfirmSignOutOpen(false)
+                  } finally {
+                    setIsSigningOut(false)
+                  }
                 }}
               >
-                退出
+                {isSigningOut ? <Loader2 className="size-4 animate-spin" /> : null}
+                {isSigningOut ? "退出中…" : "退出"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

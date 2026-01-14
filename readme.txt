@@ -94,6 +94,9 @@ Supabase Google 登录（Server-side / SSR）
    - 填写 Google OAuth 的 Client ID / Client Secret（来自 Google Cloud Console）
 
 2) Supabase Dashboard -> Authentication -> URL Configuration
+   - 设置 Site URL 本地设置 http://localhost:3000
+                  正式设置 https://www.nanobananalyp.shop
+
    - 将 Redirect URLs 添加：
      - http://localhost:3000/auth/callback
      - 你的线上域名，例如 https://your-domain.com/auth/callback

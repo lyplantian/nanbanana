@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getRequestOrigin } from "@/lib/supabase/origin"
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
-  const provider = searchParams.get("provider")
-  const next = searchParams.get("next") ?? "/"
+  const url = new URL(request.url)
+  const provider = url.searchParams.get("provider")
+  const next = url.searchParams.get("next") ?? "/"
+  const origin = getRequestOrigin(request)
 
   if (provider !== "google") {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin))
